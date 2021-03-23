@@ -18,14 +18,14 @@ For the initial testing, variants of ace-minimal:11.0.0.11-alpine and pipeline-t
  Most of the specific registry names need to be customised: uk.icr.io may not be the right region, for example, and uk.icr.io/ace-registry is unlikely to be writable. Creating registries and so on (though essential) is beyond the scope of this document, but customisation of the artifacts in this repo (such as ace-pipeline.yaml) will almost certainly be necessary.
 
  The Tekton pipeline relies on docker credentials being provided for Kaniko to use when pushing the built image, and these credentials must be associated with the service account for the pipeline. Create as follows:
-```
+```bash
 kubectl create secret docker-registry regcred --docker-server=uk.icr.io --docker-username=iamapikey --docker-password=<your-api-key>
 kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master/tekton/service-account.yaml
 ```
 The service account also has the ability to create services, deployments, etc, which are necessary for running the service.
 
 Setting up the pipeline requires Tekton to be installed, tasks to be created, and the pipeline itself to be configured:
-```
+```bash
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.21.0/release.yaml
 kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master/tekton/10-maven-ace-build-task.yaml
 kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master/tekton/20-deploy-to-cluster-task.yaml
@@ -33,7 +33,7 @@ kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master
 ```
 
 Once that has been accomplished, the simplest way to run the pipeline is
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master/tekton/ace-pipeline-run.yaml
 tkn pipelinerun logs ace-pipeline-run-1 -f
 ```
@@ -43,13 +43,13 @@ and this should build the projects, run the unit tests, create a docker image, a
 ## OpenShift CRC
 
 The majority of steps are the same, but the registry authentication is a little different; assuming a session logged in as kubeadmin, it would look as follows:
-```
+```bash
 kubectl create secret docker-registry regcred --docker-server=image-registry.openshift-image-registry.svc:5000 --docker-username=kubeadmin --docker-password=$(oc whoami -t)
 ```
 Note that the actual password itself (as opposed to the hash provided by "oc whoami -t") does not work for registry authentication for some reason.
 
 After that, the pipeline run would be
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/ot4i/ace-demo-pipeline/master/tekton/ace-pipeline-run-crc.yaml
 tkn pipelinerun logs ace-pipeline-run-1 -f
 ```
